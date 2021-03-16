@@ -885,7 +885,7 @@ All results are returned in JSON. There are three general types of results:
 ### Future improvements
 --------------------------------------------------
 
-Due to the fact that it is an MVP and due to the short time for delivery, this project was developed using a methodology of continuous evolution and the following functionalities (requirements) were pending:
+Due to the fact that it is an MVP and the short time for delivery, this project was developed using a methodology of continuous evolution and the following functionalities (requirements) were pending:
 
 * Implementation of unit tests.
 * Implementation of logs in files or databases.
