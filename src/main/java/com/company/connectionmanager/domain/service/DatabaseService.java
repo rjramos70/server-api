@@ -34,29 +34,25 @@ public class DatabaseService {
 
 	
 	public Table getTable(Long connectorId, String schemaName, String tableName) {
-		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schemaName);
+		
+		Schema schema = findOrFailSchema(connectorId, schemaName);
+		
+		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schema.getSchemaName());
 		
 		String[] types = {"TABLE","VIEW"};
 		String primaryKey = null; 
 		String tableType = null;
-		int numberOfRows = 0;
+		int numberOfColumns = 0;
 		List<Column> columns = new ArrayList<>();
 		
 		try {
-			ResultSet rsTables = metaData.getTables(schemaName, null, tableName, types);
-			ResultSet rsColumns = metaData.getColumns(schemaName, null, null, null);
-			
-			rsColumns.last();
-			numberOfRows = rsColumns.getRow();
-			rsColumns.beforeFirst();
+			ResultSet rsTables = metaData.getTables(schema.getSchemaName(), null, tableName, types);
+			ResultSet rsColumns = metaData.getColumns(schema.getSchemaName(), null, null, null);
 			
 			while (rsTables.next()) {
-				String catalog2 = rsTables.getString(1);
-				// String tableName = rsTables.getString(3);
 				tableType = rsTables.getString(4);
 				
-				ResultSet pks = metaData.getPrimaryKeys(catalog2, null, tableName);
-				
+				ResultSet pks = metaData.getPrimaryKeys(schema.getSchemaName(), null, tableName);
 				
 				while (rsColumns.next()) {
 					if(tableName.equals(rsColumns.getString(3))) {
@@ -69,6 +65,7 @@ public class DatabaseService {
 							}
 						}
 					}
+					numberOfColumns++;
 				}
 				rsColumns.first();
 				
@@ -87,7 +84,7 @@ public class DatabaseService {
 				.name(tableName)
 				.primaryKey(primaryKey)
 				.tableType(tableType)
-				.numberOfRows(numberOfRows)
+				.numberOfColumns(numberOfColumns)
 				.columns(columns)
 				.build();
 		
@@ -106,62 +103,59 @@ public class DatabaseService {
 
 		Schema schema = findOrFailSchema(connectorId, schemaName);
 
-		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schemaName);
+		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schema.getSchemaName());
 
 		List<Table> tables = new ArrayList<>();
 
 		try {
 			
-			String catalog1 = schemaName, schemaPattern = null, tableNamePattern = null;
 			String[] types = {"TABLE","VIEW"};
 			 
-			ResultSet rsTables = metaData.getTables(catalog1, schemaPattern, tableNamePattern, types);
-			ResultSet rsColumns = metaData.getColumns(catalog1, null, null, null);
-			
-			
-			rsColumns.last();
-			int numberOfRows = rsColumns.getRow();
-			rsColumns.beforeFirst();
-			
-			List<Column> columns = new ArrayList<>();
+			ResultSet rsTables = metaData.getTables(schema.getSchemaName(), null, null, types);
 			
 			while (rsTables.next()) {
-				String catalog2 = rsTables.getString(1);
+				
+				List<Column> columns = new ArrayList<>();
+				
 				String tableName = rsTables.getString(3);
 				String tableType = rsTables.getString(4);
 				
-				ResultSet pks = metaData.getPrimaryKeys(catalog2, null, tableName);
+				ResultSet rsColumns = metaData.getColumns(schema.getSchemaName(), null, tableName, null);
 				
+				int numberOfColumns = 0;
+				
+				// Get table columns
 				while (rsColumns.next()) {
 					if(tableName.equals(rsColumns.getString(3))) {
 						String columnName = rsColumns.getString(4);
 						String columnType = rsColumns.getString(6);
 						columns.add(Column.builder().name(columnName).type(columnType).build());
-						while(pks.next()) {
-							if(tableName.equals(pks.getString(3))) {
-								String primaryKey = pks.getString("COLUMN_NAME");
-								
-								Table tableBuilder = Table
-										.builder()
-										.name(tableName)
-										.primaryKey(primaryKey)
-										.tableType(tableType)
-										.numberOfRows(numberOfRows)
-										.columns(columns)
-										.build();
-													
-								tables.add(tableBuilder);
-							}
-						}
+						
+					}
+					numberOfColumns++;
+				}
+				
+				ResultSet pks = metaData.getPrimaryKeys(schema.getSchemaName(), null, tableName);
+				
+				// Get column primary key name
+				while(pks.next()) {
+					if(tableName.equals(pks.getString(3))) {
+						Table tableBuilder = Table
+								.builder()
+								.name(tableName)
+								.primaryKey(pks.getString("COLUMN_NAME"))
+								.tableType(tableType)
+								.numberOfColumns(numberOfColumns)
+								.columns(columns)
+								.build();
+											
+						tables.add(tableBuilder);
 					}
 				}
-				rsColumns.first();
 				
 			}
 			rsTables.close();
-			rsColumns.close();
 			
-
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -213,7 +207,6 @@ public class DatabaseService {
 			schema.setTables(tables);
 			schema.setNumberOfTables(tables.size());
 		});
-		
 
 		return schemaList;
 	}

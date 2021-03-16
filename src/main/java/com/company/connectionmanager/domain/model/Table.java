@@ -27,8 +27,8 @@ public class Table {
 	@ApiModelProperty(value = "Name of the unique key", example = "id", position = 20)
 	private String primaryKey;
 
-	@ApiModelProperty(value = "Number of rows in the tables", example = "5", position = 30)
-	private Integer numberOfRows;
+	@ApiModelProperty(value = "Number of columns in the tables", example = "5", position = 30)
+	private Integer numberOfColumns;
 	
 	@ApiModelProperty(value = "List of table columns", position = 401)
 	private List<Column> columns;
