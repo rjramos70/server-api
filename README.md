@@ -36,6 +36,7 @@ To get a local copy up and running follow these simple example steps.
 * Java 11 or up runtime version up and running.
 * Internet access to download the packages from the project.
 * Local installation of an IDE like Eclipse, Spring Tool Suite to open and execute the project.
+* By default, the `afterMigration.sql` file already registers a MySQL database connection drive type, which is a prerequisite for registering any Connector.
 
 #### Installation
 
@@ -62,6 +63,61 @@ _For more examples, please refer to the [http://localhost:9090/swagger-ui.html#/
 At this time, you have a RESTful API server running at `http://127.0.0.1:9090`. It provides the following endpoints:
 
 * `GET /actuator/health`: checks the health of the project, whether it is running or not
+
+
+--------------------------------------------------
+### Glossary
+--------------------------------------------------
+
+
+* `Database` 
+
+
+`DatabaseType` - Driver data with the respective database type. 
+
+***Example:*** 
+
+```
+{
+  "id": 1,
+  "description": "MySQL database instance",
+  "type": "MySQL",
+  "jdbcPrefix": "jdbc:mysql://",
+  "jdbcDriver": "com.mysql.cj.jdbc.Driver"
+} 
+```
+
+`Connector` - It is the instance with the necessary data to connect to a database, for that we need to fill in the following data: name, hostName, port, databaseName, username, password, databasetype. 
+
+***Example:*** 
+
+```
+{
+    "name": "algafoodDB44444",
+    "hostName": "localhost",
+    "port": 3306,
+    "databaseName": "algafood",
+    "username": "root",
+    "password": "root",
+    "databasetype": {
+        "id": 1
+    }
+} 
+```
+
+`Database` - Shows schemas and their details. 
+
+***Example:*** 
+
+```
+{
+  "id": 1,
+  "description": "MySQL database instance",
+  "type": "MySQL",
+  "jdbcPrefix": "jdbc:mysql://",
+  "jdbcDriver": "com.mysql.cj.jdbc.Driver"
+} 
+```
 
 --------------------------------------------------
 ### Database Type
@@ -421,7 +477,7 @@ curl -X GET "http://localhost:9090/databases/1" -H "accept: application/json"
 		  "name": "kitchen",
 		  "tableType": "TABLE",
 		  "primaryKey": "id",
-		  "numberOfRows": 2,
+		  "numberOfColumns": 2,
 		  "columns": [{
 				"name": "id",
 				"type": "BIGINT"
@@ -433,7 +489,7 @@ curl -X GET "http://localhost:9090/databases/1" -H "accept: application/json"
 		   "name": "state",
 		   "tableType": "TABLE",
 		   "primaryKey": "id",
-		   "numberOfRows": 8,
+		   "numberOfColumns": 8,
 		   "columns": [{
 				 "name": "id",
 				 "type": "BIGINT"
@@ -714,7 +770,7 @@ curl -X GET "http://localhost:9090/databases/1/ataccama/detail" -H "accept: appl
     "name": "connector",
     "tableType": "TABLE",
     "primaryKey": "id",
-    "numberOfRows": 10,
+    "numberOfColumns": 10,
     "columns": [
       {
         "name": "id",
@@ -762,7 +818,7 @@ curl -X GET "http://localhost:9090/databases/1/ataccama/detail" -H "accept: appl
     "name": "databasetype",
     "tableType": "TABLE",
     "primaryKey": "id",
-    "numberOfRows": 7,
+    "numberOfColumns": 7,
     "columns": [
       {
         "name": "id",
@@ -799,9 +855,6 @@ curl -X GET "http://localhost:9090/databases/1/ataccama/detail" -H "accept: appl
 
 --------------------------------------------------
 
-
-
-
 * `GET /databases/{connectorId}/schemas`: return a lists all schemes based on the connector's ID
 
 
@@ -829,6 +882,14 @@ All results are returned in JSON. There are three general types of results:
 - Headers-only
 - Lists
 
+### Future improvements
+--------------------------------------------------
+
+Due to the fact that it is an MVP and due to the short time for delivery, this project was developed using a methodology of continuous evolution and the following functionalities (requirements) were pending:
+
+* Implementation of unit tests.
+* Implementation of logs in files or databases.
+* Implementation of web interfaces to facilitate the experience with the end user.
 
 ### License
 --------------------------------------------------
