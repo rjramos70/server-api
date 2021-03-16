@@ -14,25 +14,26 @@ import lombok.Setter;
 @Getter
 public class DatabaseTypeModel {
 	
-	@ApiModelProperty(value = "Unique key", example = "1")
+	@ApiModelProperty(value = "Unique key", example = "1", position = 1)
 	@NotNull(groups = Groups.InsertConnector.class)
 	@Id
 	private Long id;
 	
-	@ApiModelProperty(value = "A brief description of the connection type name", example = "MySQL database instance")
+	@ApiModelProperty(value = "A brief description of the connection type name", example = "MySQL database instance", position = 10)
 	@NotBlank(groups = Groups.InsertConnector.class)
 	private String description;	
 	
-	@ApiModelProperty(value = "What type of database connection", example = "MySQL")
+	@ApiModelProperty(value = "What type of database connection", example = "MySQL", position = 20)
 	@NotBlank(groups = Groups.InsertConnector.class)
 	private String type;
 	
-	@ApiModelProperty(value = "The JDBC string connection", example = "jdbc:mysql://")
+	@ApiModelProperty(value = "The JDBC string connection", example = "jdbc:mysql://", position = 30)
 	@NotBlank(groups = Groups.InsertConnector.class)
 	private String jdbcPrefix;
 	
-	@ApiModelProperty(value = "The JDBC driver string connection", example = "com.mysql.cj.jdbc.Driver")
+	@ApiModelProperty(value = "The JDBC driver string connection", example = "com.mysql.cj.jdbc.Driver", position = 40)
 	@NotBlank(groups = Groups.InsertConnector.class)
 	private String jdbcDriver;
 
+	
 }

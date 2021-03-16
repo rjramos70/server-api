@@ -71,6 +71,6 @@ public class DatabaseType {
 	@Column(nullable = false, columnDefinition = "datetime")
 	private LocalDateTime updated;
 	
-	
 
+	
 }

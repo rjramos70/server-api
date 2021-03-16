@@ -26,5 +26,4 @@ public class DatabaseTypeModelAssembler {
 					.collect(Collectors.toList());
 	}
 	
-	
 }

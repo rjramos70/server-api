@@ -22,4 +22,5 @@ public class WebConfig implements WebMvcConfigurer{
 		return CacheControl.maxAge(20, TimeUnit.SECONDS).cachePublic();
 	}
 
+	
 }

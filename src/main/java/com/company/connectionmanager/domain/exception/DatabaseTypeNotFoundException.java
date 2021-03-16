@@ -15,4 +15,5 @@ public class DatabaseTypeNotFoundException extends EntityNotFoundException{
 		this(String.format(DATABASETYPE_NOT_FOUND_MSG, databasetypeId));
 	}
 
+	
 }

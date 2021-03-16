@@ -15,4 +15,5 @@ public class DatabaseTypeIdInput {
 	@ApiModelProperty(value = "Unique key", example = "1", required = true)
 	@NotNull
 	private Long id;
+	
 }

@@ -19,9 +19,9 @@ public class DatabaseRespositoryImpl{
 	@Autowired
 	private ConnectorRepository connectorRepository;
 	
-	public DatabaseMetaData getDatabaseMetaData(Long connectorId) {
+	public DatabaseMetaData getDatabaseMetaData(Long connectorId, String schemaName) {
 		
-		Connection connection = getConnection(connectorId);
+		Connection connection = getConnectionByIdAndSchemaName(connectorId, schemaName);
 		
 		DatabaseMetaData metaData = null;
 
@@ -34,7 +34,7 @@ public class DatabaseRespositoryImpl{
 		return metaData;
 	}
 
-	public Connection getConnection(Long connectorId) {
+	public Connection getConnectionById(Long connectorId) {
 		Connector connector = connectorRepository
 				.findById(connectorId)
 				.orElseThrow(() -> new ConnectorNotFoundException(connectorId));
@@ -57,7 +57,33 @@ public class DatabaseRespositoryImpl{
 			Class.forName(jdbcDriver);
 			conn = DriverManager.getConnection(URI, username, password);
 		} catch (ClassNotFoundException | SQLException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return conn;
+	}
+
+	public Connection getConnectionByIdAndSchemaName(Long connectorId, String schemaName) {
+		Connector connector = connectorRepository
+				.findById(connectorId)
+				.orElseThrow(() -> new ConnectorNotFoundException(connectorId));
+		
+	 	String jdbcDriver = connector.getDatabasetype().getJdbcDriver();
+	 	
+	 	String jdbcPrefix = connector.getDatabasetype().getJdbcPrefix();
+	 	String hostName = connector.getHostName();
+	 	String port = String.valueOf(connector.getPort());
+	 	String username = connector.getUsername();
+	 	String password = connector.getPassword();
+	 	
+		String URI = String.format("%s%s:%s/%s", jdbcPrefix, hostName, port, schemaName);
+		
+		Connection conn = null;
+		
+		try {
+			Class.forName(jdbcDriver);
+			conn = DriverManager.getConnection(URI, username, password);
+		} catch (ClassNotFoundException | SQLException e) {
 			e.printStackTrace();
 		}
 		

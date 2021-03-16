@@ -26,5 +26,4 @@ public class ConnectorModelAssembler {
 					.collect(Collectors.toList());
 	}
 	
-	
 }

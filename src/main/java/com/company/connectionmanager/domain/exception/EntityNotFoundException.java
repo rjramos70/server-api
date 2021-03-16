@@ -8,4 +8,5 @@ public abstract class EntityNotFoundException extends BusinessException{
 		super(message);
 	}
 
+	
 }

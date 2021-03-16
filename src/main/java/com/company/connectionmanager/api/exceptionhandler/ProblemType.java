@@ -10,11 +10,8 @@ public enum ProblemType {
 	ARGUMENT_TYPE_MISMATCH("/argument-type-mismatch", "Argument type not valid"), 
 	BUSINESS_RULE_ERROR("/business-rule-error", "Business rule error");
 	
-	
-	
 	private String title;
 	private String uri;
-	
 	
 	private ProblemType(String path, String title) {
 		this.uri = "https://ataccama.com".concat(path);

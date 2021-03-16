@@ -11,4 +11,5 @@ public class TableNotFoundException extends BusinessException{
 		super(String.format(TABLE_NOT_FOUND_MSG, message));
 	}
 
+	
 }

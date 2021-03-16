@@ -6,4 +6,5 @@ import com.company.connectionmanager.domain.model.DatabaseType;
 
 public interface DatabaseTypeRepository extends JpaRepository<DatabaseType, Long>{
 
+	
 }

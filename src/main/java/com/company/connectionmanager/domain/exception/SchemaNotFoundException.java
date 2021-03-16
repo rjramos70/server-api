@@ -11,4 +11,5 @@ public class SchemaNotFoundException extends BusinessException{
 		super(String.format(SCHEMA_NOT_FOUND_MSG, message));
 	}
 
+	
 }

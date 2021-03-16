@@ -28,7 +28,6 @@ public class ApiExceptionHandlers extends ResponseEntityExceptionHandler {
 			+ "Try again and if the problem persists, contact your system administrator.";
 
 	
-	
 	@Override
 	protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {

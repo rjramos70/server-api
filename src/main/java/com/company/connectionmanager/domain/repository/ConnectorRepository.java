@@ -12,4 +12,5 @@ public interface ConnectorRepository extends JpaRepository<Connector, Long>{
 	@Query(nativeQuery = true, value = "select max(updated) from connector")
 	LocalDateTime getLastUpdate();
 	
+	
 }

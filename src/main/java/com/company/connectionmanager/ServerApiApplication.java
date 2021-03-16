@@ -10,4 +10,5 @@ public class ServerApiApplication {
 		SpringApplication.run(ServerApiApplication.class, args);
 	}
 
+	
 }

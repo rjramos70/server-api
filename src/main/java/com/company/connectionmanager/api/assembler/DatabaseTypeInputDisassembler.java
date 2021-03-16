@@ -19,8 +19,6 @@ public class DatabaseTypeInputDisassembler {
 	
 	public void copyToDomainObject(DatabaseTypeInput databaseTypeInput, DatabaseType currentDatabaseType) {
 		
-		// currentConnector.setDatabasetype(new DatabaseType());
-		
 		modelMapper.map(databaseTypeInput, currentDatabaseType);
 	}
 }

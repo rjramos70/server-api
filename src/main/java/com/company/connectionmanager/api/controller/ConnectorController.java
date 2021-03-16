@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,20 +25,17 @@ import com.company.connectionmanager.api.assembler.ConnectorInputDisassembler;
 import com.company.connectionmanager.api.assembler.ConnectorModelAssembler;
 import com.company.connectionmanager.api.model.ConnectorModel;
 import com.company.connectionmanager.api.model.input.ConnectorInput;
+import com.company.connectionmanager.api.openapi.controller.ConnectorControllerOpenApi;
 import com.company.connectionmanager.core.web.WebConfig;
 import com.company.connectionmanager.domain.exception.BusinessException;
 import com.company.connectionmanager.domain.exception.ConnectorNotFoundException;
 import com.company.connectionmanager.domain.model.Connector;
 import com.company.connectionmanager.domain.service.ConnectorService;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 
-@Api(tags = "Connector")
 @RestController
-@RequestMapping(value = "/connectors")
-public class ConnectorController {
+@RequestMapping(path = "/connectors", produces = MediaType.APPLICATION_JSON_VALUE)
+public class ConnectorController implements ConnectorControllerOpenApi{
 	
 	@Autowired
 	private ConnectorService connectorService;
@@ -48,7 +46,6 @@ public class ConnectorController {
 	@Autowired
 	private ConnectorInputDisassembler connectorInputDisassembler;
 	
-	@ApiOperation("List all connectors registered in our database")
 	@GetMapping
 	public ResponseEntity<List<ConnectorModel>> findAll(ServletWebRequest request){
 		
@@ -77,11 +74,8 @@ public class ConnectorController {
 		
 	}
 	
-	@ApiOperation("Get a connector based on an ID")
 	@GetMapping("/{connectorId}")
-	public ResponseEntity<ConnectorModel> findById(
-			@ApiParam(value = "A valid connector ID", example = "1")
-			@PathVariable Long connectorId) {
+	public ResponseEntity<ConnectorModel> findById(@PathVariable Long connectorId) {
 		
 		ConnectorModel connectorModel = connectorModelAssembler.toModel(connectorService.findOrFail(connectorId));
 		
@@ -91,16 +85,12 @@ public class ConnectorController {
 				
 	}
 	
-	@ApiOperation("Register a new connector")
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ConnectorModel insert(
-			@ApiParam(name = "body", value = "A representation of a new Connector")
-			@RequestBody @Valid ConnectorInput connectorInput) {	
+	public ConnectorModel insert(@RequestBody @Valid ConnectorInput connectorInput) {	
 		try {
 			
 			Connector connector = connectorInputDisassembler.toDomainObjet(connectorInput);
-			
 			
 			return connectorModelAssembler.toModel(connectorService.save(connector));
 		} catch (ConnectorNotFoundException e) {
@@ -108,12 +98,8 @@ public class ConnectorController {
 		}
 	}
 	
-	@ApiOperation("Update a connector based on an ID")
 	@PutMapping("/{connectorId}")
-	public ConnectorModel update(
-			@ApiParam(value = "A valid connector ID", example = "1")
-			@PathVariable Long connectorId, 
-			@ApiParam(name = "body", value = "A representation of a new Connector with the new data")
+	public ConnectorModel update(@PathVariable Long connectorId, 
 			@RequestBody ConnectorInput connectorInput) {
 		
 		Connector currentConnector = connectorService.findOrFail(connectorId);
@@ -127,11 +113,9 @@ public class ConnectorController {
 		}
 	}
 	
-	@ApiOperation("Remove a connector based on an valid ID")
 	@DeleteMapping("/{connectorId}")
-	public void delete(
-			@ApiParam(value = "A valid connector ID", example = "1")
-			@PathVariable Long connectorId) {
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable Long connectorId) {
 		connectorService.delete(connectorId);
 	}
 

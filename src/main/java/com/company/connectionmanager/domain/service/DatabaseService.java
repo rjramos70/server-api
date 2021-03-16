@@ -32,6 +32,67 @@ public class DatabaseService {
 	@Autowired
 	private ConnectorService connectorService;
 
+	
+	public Table getTable(Long connectorId, String schemaName, String tableName) {
+		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schemaName);
+		
+		String[] types = {"TABLE","VIEW"};
+		String primaryKey = null; 
+		String tableType = null;
+		int numberOfRows = 0;
+		List<Column> columns = new ArrayList<>();
+		
+		try {
+			ResultSet rsTables = metaData.getTables(schemaName, null, tableName, types);
+			ResultSet rsColumns = metaData.getColumns(schemaName, null, null, null);
+			
+			rsColumns.last();
+			numberOfRows = rsColumns.getRow();
+			rsColumns.beforeFirst();
+			
+			while (rsTables.next()) {
+				String catalog2 = rsTables.getString(1);
+				// String tableName = rsTables.getString(3);
+				tableType = rsTables.getString(4);
+				
+				ResultSet pks = metaData.getPrimaryKeys(catalog2, null, tableName);
+				
+				
+				while (rsColumns.next()) {
+					if(tableName.equals(rsColumns.getString(3))) {
+						String columnName = rsColumns.getString(4);
+						String columnType = rsColumns.getString(6);
+						columns.add(Column.builder().name(columnName).type(columnType).build());
+						while(pks.next()) {
+							if(tableName.equals(pks.getString(3))) {
+								primaryKey = pks.getString("COLUMN_NAME");
+							}
+						}
+					}
+				}
+				rsColumns.first();
+				
+				
+			}
+			rsTables.close();
+			rsColumns.close();
+			
+			
+		} catch (SQLException e) {
+			new TableNotFoundException(tableName);
+		}
+		
+		return Table
+				.builder()
+				.name(tableName)
+				.primaryKey(primaryKey)
+				.tableType(tableType)
+				.numberOfRows(numberOfRows)
+				.columns(columns)
+				.build();
+		
+	}
+	
 	/**
 	 * Method that returns the list of all tables with their respective columns and
 	 * types for a given Schema
@@ -45,53 +106,62 @@ public class DatabaseService {
 
 		Schema schema = findOrFailSchema(connectorId, schemaName);
 
-		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId);
+		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schemaName);
 
 		List<Table> tables = new ArrayList<>();
 
 		try {
-			ResultSet rsTables = metaData.getTables(schema.getSchemaName(), null, "%", null);
 			
+			String catalog1 = schemaName, schemaPattern = null, tableNamePattern = null;
+			String[] types = {"TABLE","VIEW"};
+			 
+			ResultSet rsTables = metaData.getTables(catalog1, schemaPattern, tableNamePattern, types);
+			ResultSet rsColumns = metaData.getColumns(catalog1, null, null, null);
+			
+			
+			rsColumns.last();
+			int numberOfRows = rsColumns.getRow();
+			rsColumns.beforeFirst();
+			
+			List<Column> columns = new ArrayList<>();
 			
 			while (rsTables.next()) {
-				String catalog = rsTables.getString("TABLE_CAT");
-		        String schem = rsTables.getString("TABLE_SCHEM");
-		        String tableName = rsTables.getString("TABLE_NAME");
-		        String tableType = rsTables.getString("TABLE_TYPE");
-		        
-		        String primaryKey = null;
-		        try (ResultSet primaryKeys = metaData.getPrimaryKeys(catalog, schem, tableName)) {
-		            while (primaryKeys.next()) {
-		            	primaryKey = primaryKeys.getString("COLUMN_NAME");
-		            }
-		        }
+				String catalog2 = rsTables.getString(1);
+				String tableName = rsTables.getString(3);
+				String tableType = rsTables.getString(4);
 				
-				ResultSet rsColumns = metaData.getColumns(null, null, tableName, null);
+				ResultSet pks = metaData.getPrimaryKeys(catalog2, null, tableName);
 				
-				rsColumns.last();
-				int numberOfRows = rsColumns.getRow();
-				rsColumns.beforeFirst();
-				
-				
-				List<Column> columns = new ArrayList<>();
 				while (rsColumns.next()) {
-					columns.add(Column.builder().name(rsColumns.getString(4)).type(rsColumns.getString(6)).build());
-				}
-				rsColumns.close();
-				
-				
-				Table tableBuilder = Table
-					.builder()
-					.name(tableName)
-					.primaryKey(primaryKey)
-					.tableType(tableType)
-					.numberOfRows(numberOfRows)
-					.columns(columns)
-					.build();
+					if(tableName.equals(rsColumns.getString(3))) {
+						String columnName = rsColumns.getString(4);
+						String columnType = rsColumns.getString(6);
+						columns.add(Column.builder().name(columnName).type(columnType).build());
+						while(pks.next()) {
+							if(tableName.equals(pks.getString(3))) {
+								String primaryKey = pks.getString("COLUMN_NAME");
 								
-				tables.add(tableBuilder);
+								Table tableBuilder = Table
+										.builder()
+										.name(tableName)
+										.primaryKey(primaryKey)
+										.tableType(tableType)
+										.numberOfRows(numberOfRows)
+										.columns(columns)
+										.build();
+													
+								tables.add(tableBuilder);
+							}
+						}
+					}
+				}
+				rsColumns.first();
+				
 			}
 			rsTables.close();
+			rsColumns.close();
+			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -112,7 +182,7 @@ public class DatabaseService {
 		List<Schema> schemas = new ArrayList<>();
 
 		try {
-			DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connector.getId());
+			DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connector.getId(), connector.getDatabaseName());
 
 			ResultSet catalogs = metaData.getCatalogs();
 
@@ -158,7 +228,7 @@ public class DatabaseService {
 	 */
 	public List<JsonNode> getAllDataFromTable(Long connectorId, String schemaName, String tableName) {
 
-		Connection connection = databaseRepositoryImpl.getConnection(connectorId);
+		Connection connection = databaseRepositoryImpl.getConnectionByIdAndSchemaName(connectorId, schemaName);
 
 		Table table = findOrFailTable(connectorId, schemaName, tableName);
 
@@ -176,9 +246,10 @@ public class DatabaseService {
 	 */
 	public List<JsonNode> getTableColumnsStatistics(Long connectorId, String schemaName, String tableName) {
 
-		Connection connection = databaseRepositoryImpl.getConnection(connectorId);
+		Connection connection = databaseRepositoryImpl.getConnectionByIdAndSchemaName(connectorId, schemaName);
 
 		List<Column> columns = getColumns(connectorId, schemaName, tableName);
+		
 
 		List<JsonNode> resultJsonNodes = new ArrayList<>();
 
@@ -323,21 +394,24 @@ public class DatabaseService {
 	public List<Column> getColumns(Long connectorId, String schemaName, String tableName) {
 
 		Table table = findOrFailTable(connectorId, schemaName, tableName);
-
-		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId);
+		
+		DatabaseMetaData metaData = databaseRepositoryImpl.getDatabaseMetaData(connectorId, schemaName);
 
 		List<Column> columns = new ArrayList<>();
 
-		ResultSet rs;
 		try {
-			rs = metaData.getColumns(null, null, table.getName(), null);
-			while (rs.next()) {
-				columns.add(Column.builder().name(rs.getString(4)).type(rs.getString(6)).build());
+			
+			ResultSet result = metaData.getColumns(schemaName, null, table.getName(), null);
+			
+			while (result.next()) {
+				columns.add(Column.builder().name(result.getString(4)).type(result.getString(6)).build());
 			}
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		return columns;
 	}
 
@@ -363,8 +437,10 @@ public class DatabaseService {
 	 * @return Table
 	 */
 	public Table findOrFailTable(Long connectorId, String schemaName, String tableName) {
+		
 		Schema schema = findOrFailSchema(connectorId, schemaName);
 		List<Table> tables = getTables(connectorId, schema.getSchemaName());
+		
 		return tables.stream().filter(t -> t.getName().equals(tableName)).findAny()
 				.orElseThrow(() -> new TableNotFoundException(tableName));
 	}
